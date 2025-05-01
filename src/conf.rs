@@ -1,24 +1,17 @@
-use serde::{Deserialize, Serialize};
+use rocket::figment::{self, Figment};
+use serde::Deserialize;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, Debug)]
+#[serde(crate = "rocket::serde")]
 pub struct Conf {
-    version: u8,
-    broker_url: String,
-    broker_port: u16,
-    broker_id: String,
+    pub broker_url: String,
+    pub broker_port: u16,
+    pub broker_id: String,
+	pub keep_alive: u64,
+	pub session_timeout: u64,
 }
 
-impl ::std::default::Default for Conf {
-    fn default() -> Self {
-        Self {
-            version: Default::default(),
-            broker_url: Default::default(),
-            broker_port: Default::default(),
-            broker_id: Default::default(),
-        }
-    }
-}
 
-pub fn load_config() -> Result<Conf, confy::ConfyError> {
-    confy::load("synnapse-bridge", None)
+pub fn load_config(figment: &Figment) -> figment::Result<Conf> {
+	figment.extract()
 }
