@@ -2,8 +2,10 @@ use std::collections::HashMap;
 
 pub mod mqtt;
 pub mod conf;
+pub mod db;
 
 use conf::load_config;
+use db::{run_migration, setup_db};
 use mqtt::DeviceInfo;
 use rocket::futures::lock::Mutex;
 
@@ -22,9 +24,14 @@ pub struct AppState {
 
 #[main]
 async fn main() -> Result<(), rocket::Error> {
-    let rocket = rocket::build().mount("/", routes![index]).launch().await?;
+    let rocket = rocket::build().mount("/", routes![index]);
 
-    println!("{:?}", load_config(rocket.figment()).unwrap());
+    let conf = load_config(rocket.figment()).expect("Unable to load config");
+	let db = setup_db(conf.db_str, "bridge".to_string()).await.expect("Unable to connect to db");
+
+	run_migration(&db).await.expect("Migrations failed");
+
+	rocket.manage(db).launch().await?;
 
     Ok(())
 }

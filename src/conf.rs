@@ -9,6 +9,7 @@ pub struct Conf {
     pub broker_id: String,
 	pub keep_alive: u64,
 	pub session_timeout: u64,
+	pub db_str: String,
 }
 
 
