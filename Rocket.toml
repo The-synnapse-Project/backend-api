@@ -1,7 +1,0 @@
-
-[default]
-broker_url = "localhost"
-broker_port = 420
-broker_id = "cum69"
-keep_alive = 3200
-session_timeout = 4444

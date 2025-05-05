@@ -1,22 +1,17 @@
 [package]
-name = "quick-start"
+name = "synnapse-api"
 version = "0.1.0"
-edition = "2021"
-license = "MIT"
+edition = "2024"
 
 [workspace]
-members = [".", "entity", "migration"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+members = ["api", "db"]
 
 [dependencies]
-rumqttc = "0.24.0"
-serde = { version = "1.0", features = ["derive"] }
-rocket = "0.5.1"
-sea-orm = { version = "1.1.10", features = [
-    "sqlx-postgres",
-    "runtime-tokio-native-tls",
-    "macros",
+api = { path = "./api" }
+clap = { version = "4.5.37", features = ["derive"] }
+db = { path = "./db" }
+diesel = { version = "2.2.0", features = [
+    "sqlite",
+    "returning_clauses_for_sqlite_3_35",
 ] }
-entity = { path = "entity" }
-migration = { path = "migration" }
+tokio = "1.44.2"
