@@ -1580,7 +1580,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "synnapse-api"
+name = "synnapse-db-api-cli"
 version = "0.1.0"
 dependencies = [
  "api",

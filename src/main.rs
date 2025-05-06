@@ -2,6 +2,11 @@ use clap::Parser;
 use db::establish_connection;
 
 #[derive(Parser)]
+#[command(
+    name = "synnapse-db-api-cli",
+    version,
+    about = "A CLI for the Synnapse project for connecting to database with an API"
+)]
 struct CliArgs {
     /// What to do
     #[command(subcommand)]
@@ -13,21 +18,21 @@ enum Subcommands {
     /// Run the server
     Serve {
         /// The path to the SQLite database file
-        #[arg(index = 2)]
+        #[arg()]
         database_url: String,
     },
 
     /// Show the database
     Show {
         /// The path to the SQLite database file
-        #[arg(index = 2)]
+        #[arg()]
         database_url: String,
     },
 
     /// Seed the database
     Seed {
         /// The path to the SQLite database file
-        #[arg(index = 2)]
+        #[arg()]
         database_url: String,
     },
 }
