@@ -3,7 +3,7 @@
 diesel::table! {
     entries (id) {
         id -> Text,
-        person -> Text,
+        person_id -> Text,
         instant -> Timestamp,
         action -> Text,
     }
@@ -12,7 +12,7 @@ diesel::table! {
 diesel::table! {
     permissions (id) {
         id -> Text,
-        person -> Text,
+        person_id -> Text,
         dashboard -> Bool,
         see_self_history -> Bool,
         see_others_history -> Bool,
@@ -31,4 +31,8 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(entries, permissions, person,);
+diesel::allow_tables_to_appear_in_same_query!(
+    entries,
+    permissions,
+    person,
+);

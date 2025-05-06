@@ -1,5 +1,5 @@
-use db::{establish_connection, models::*};
-use diesel::prelude::*;
+use db::establish_connection;
+use db::interactions::{Entries, Permissions, Person};
 use rocket::{State, response::content::RawJson};
 
 #[macro_use]
@@ -7,11 +7,10 @@ extern crate rocket;
 
 #[get("/persons")]
 fn persons(db: &State<Database>) -> RawJson<String> {
-    use db::schema::person::dsl::*;
     let db_url = &db.db_url;
 
     let connection = &mut establish_connection(db_url);
-    let res = person.select(Person::as_select()).load(connection);
+    let res = Person::get(connection);
 
     match res {
         Ok(persons) => RawJson(serde_json::to_string(&persons).unwrap()),
@@ -21,10 +20,9 @@ fn persons(db: &State<Database>) -> RawJson<String> {
 
 #[get("/entries")]
 fn entries(db: &State<Database>) -> &'static str {
-    use db::schema::entries::dsl::*;
     let db_url = &db.db_url;
     let connection = &mut establish_connection(db_url);
-    let res = entries.select(Entry::as_select()).load(connection);
+    let res = Entries::get(connection);
     match res {
         Ok(g_entries) => {
             let mut result = String::new();
@@ -38,12 +36,9 @@ fn entries(db: &State<Database>) -> &'static str {
 }
 #[get("/permissions")]
 fn permissions(db: &State<Database>) -> &'static str {
-    use db::schema::permissions::dsl::*;
     let db_url = &db.db_url;
     let connection = &mut establish_connection(db_url);
-    let res = permissions
-        .select(Permissions::as_select())
-        .load(connection);
+    let res = Permissions::get(connection);
     match res {
         Ok(g_permissions) => {
             let mut result = String::new();

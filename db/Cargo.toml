@@ -4,9 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-chrono = "0.4.41"
-diesel = { version = "2.2.0", features = [
+chrono = { version = "0.4.41", features = ["serde"] }
+diesel = { version = "2.2.10", features = [
     "sqlite",
     "returning_clauses_for_sqlite_3_35",
+    "chrono",
+    "postgres",
 ] }
+pbkdf2 = { version = "0.12.2", features = ["simple"] }
+rand_core = { version = "0.9.3", features = ["std"] }
 serde = "1.0.219"
+uuid = { version = "1", features = ["v4"] }
