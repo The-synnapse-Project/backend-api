@@ -9,7 +9,7 @@ use rocket_okapi::openapi;
 
 /// Get all permissions
 #[openapi(tag = "Permissions")]
-#[get("/")]
+#[get("/api/permission")]
 pub async fn get_permissions(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let permissions = PermissionsInteractor::get(conn).unwrap();
@@ -18,7 +18,7 @@ pub async fn get_permissions(db: &State<Database>) -> RawJson<String> {
 
 /// Get a single permission by ID
 #[openapi(tag = "Permissions")]
-#[get("/by-person/<person_id>")]
+#[get("/api/permission/by-person/<person_id>")]
 pub async fn get_permissions_by_person_id(
     db: &State<Database>,
     person_id: String,
@@ -30,7 +30,7 @@ pub async fn get_permissions_by_person_id(
 
 /// Get a single permission by ID
 #[openapi(tag = "Permissions")]
-#[get("/<permission_id>")]
+#[get("/api/permission/<permission_id>")]
 pub async fn get_permissions_by_id(db: &State<Database>, permission_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let permissions = PermissionsInteractor::get_by_id(conn, &permission_id).unwrap();
@@ -38,7 +38,7 @@ pub async fn get_permissions_by_id(db: &State<Database>, permission_id: String) 
 }
 /// Create a new permission
 #[openapi(tag = "Permissions")]
-#[post("/", format = "json", data = "<permissions>")]
+#[post("/api/permission", format = "json", data = "<permissions>")]
 pub async fn create_permissions(
     db: &State<Database>,
     permissions: Json<Permissions>,
@@ -50,7 +50,11 @@ pub async fn create_permissions(
 
 /// Update an existing permission
 #[openapi(tag = "Permissions")]
-#[put("/<permission_id>", format = "json", data = "<permissions>")]
+#[put(
+    "/api/permission/<permission_id>",
+    format = "json",
+    data = "<permissions>"
+)]
 pub async fn update_permissions(
     db: &State<Database>,
     permission_id: String,
@@ -64,7 +68,7 @@ pub async fn update_permissions(
 
 /// Delete a permission
 #[openapi(tag = "Permissions")]
-#[delete("/<permission_id>")]
+#[delete("/api/permission/<permission_id>")]
 pub async fn delete_permissions(db: &State<Database>, permission_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let deleted_permissions = PermissionsInteractor::delete(conn, &permission_id).unwrap();

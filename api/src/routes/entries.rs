@@ -10,7 +10,7 @@ use crate::models::Database;
 
 /// Get all entries
 #[openapi(tag = "Entries")]
-#[get("/")]
+#[get("/api/entry")]
 pub async fn get_entries(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let entries = EntriesInteractor::get(conn).unwrap();
@@ -19,7 +19,7 @@ pub async fn get_entries(db: &State<Database>) -> RawJson<String> {
 
 /// Get a single entry by ID
 #[openapi(tag = "Entries")]
-#[get("/<entry_id>")]
+#[get("/api/entry/<entry_id>")]
 pub async fn get_entry(db: &State<Database>, entry_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let entry = EntriesInteractor::get_by_id(conn, &entry_id).unwrap();
@@ -28,7 +28,7 @@ pub async fn get_entry(db: &State<Database>, entry_id: String) -> RawJson<String
 
 /// Get a single entry by person ID
 #[openapi(tag = "Entries")]
-#[get("/by-person/<person_id>")]
+#[get("/api/entry/by-person/<person_id>")]
 pub async fn get_entry_by_person_id(db: &State<Database>, person_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let entry = EntriesInteractor::get_by_p_id(conn, &person_id).unwrap();
@@ -37,7 +37,7 @@ pub async fn get_entry_by_person_id(db: &State<Database>, person_id: String) -> 
 
 /// Create a new entry
 #[openapi(tag = "Entries")]
-#[post("/", format = "json", data = "<entry>")]
+#[post("/api/entry", format = "json", data = "<entry>")]
 pub async fn create_entry(db: &State<Database>, entry: Json<Entry>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let new_entry = EntriesInteractor::new(conn, &entry).unwrap();
@@ -46,7 +46,7 @@ pub async fn create_entry(db: &State<Database>, entry: Json<Entry>) -> RawJson<S
 
 /// Update an existing entry
 #[openapi(tag = "Entries")]
-#[put("/<entry_id>", format = "json", data = "<entry>")]
+#[put("/api/entry/<entry_id>", format = "json", data = "<entry>")]
 pub async fn update_entry(
     db: &State<Database>,
     entry_id: String,
@@ -59,7 +59,7 @@ pub async fn update_entry(
 
 /// Delete an entry
 #[openapi(tag = "Entries")]
-#[delete("/<entry_id>")]
+#[delete("/api/entry/<entry_id>")]
 pub async fn delete_entry(db: &State<Database>, entry_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let deleted_entry = EntriesInteractor::delete(conn, &entry_id).unwrap();
