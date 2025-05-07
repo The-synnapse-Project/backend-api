@@ -64,7 +64,7 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
             ],
         )
         .mount(
-            "/doc",
+            "/docs",
             make_swagger_ui(&SwaggerUIConfig {
                 url: "../openapi.json".to_string(),
 
