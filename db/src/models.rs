@@ -1,8 +1,9 @@
 use crate::interactions::Action;
 use diesel::prelude::*;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema)]
 #[diesel(table_name = crate::schema::person)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Person {
@@ -30,7 +31,7 @@ impl Person {
     }
 }
 
-#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema)]
 #[diesel(table_name = crate::schema::permissions)]
 pub struct Permissions {
     pub id: String,
@@ -95,7 +96,7 @@ impl Permissions {
     }
 }
 
-#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema)]
 #[diesel(table_name = crate::schema::entries)]
 pub struct Entry {
     pub id: String,

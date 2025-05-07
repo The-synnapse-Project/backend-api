@@ -1,6 +1,6 @@
 use diesel::connection::Connection;
 use diesel::prelude::{PgConnection, SqliteConnection};
-use interactions::{Permissions, Person};
+use interactions::{PermissionsInteractor, PersonInteractor};
 use std::env;
 use std::path::Path;
 pub mod crypto;
@@ -46,8 +46,8 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let permission = models::Permissions::new(&person.id, true, true, true, true, true);
-    Person::new(connection, &person)?;
-    Permissions::new(connection, &permission)?;
+    PersonInteractor::new(connection, &person)?;
+    PermissionsInteractor::new(connection, &permission)?;
 
     Ok(())
 }
