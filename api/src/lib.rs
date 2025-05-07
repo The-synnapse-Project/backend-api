@@ -1,67 +1,12 @@
-use db::establish_connection;
-use db::interactions::{Entries, Permissions, Person};
-use rocket::{State, response::content::RawJson};
-
-#[macro_use]
-extern crate rocket;
-
-#[get("/persons")]
-fn persons(db: &State<Database>) -> RawJson<String> {
-    let db_url = &db.db_url;
-
-    let connection = &mut establish_connection(db_url);
-    let res = Person::get(connection);
-
-    match res {
-        Ok(persons) => RawJson(serde_json::to_string(&persons).unwrap()),
-        Err(_e) => RawJson("{\"error\": \"Error loading persons\"}".to_string()),
-    }
-}
-
-#[get("/entries")]
-fn entries(db: &State<Database>) -> &'static str {
-    let db_url = &db.db_url;
-    let connection = &mut establish_connection(db_url);
-    let res = Entries::get(connection);
-    match res {
-        Ok(g_entries) => {
-            let mut result = String::new();
-            for e in g_entries {
-                result.push_str(&format!("{}: {} <{}>\n", e.id, e.instant, e.action));
-            }
-            Box::leak(result.into_boxed_str())
-        }
-        Err(_e) => "Error loading entries",
-    }
-}
-#[get("/permissions")]
-fn permissions(db: &State<Database>) -> &'static str {
-    let db_url = &db.db_url;
-    let connection = &mut establish_connection(db_url);
-    let res = Permissions::get(connection);
-    match res {
-        Ok(g_permissions) => {
-            let mut result = String::new();
-            for p in g_permissions {
-                result.push_str(&format!(
-                    "{}: {} {} {} {} {}\n",
-                    p.id,
-                    p.dashboard,
-                    p.see_self_history,
-                    p.see_others_history,
-                    p.admin_panel,
-                    p.edit_permissions
-                ));
-            }
-            Box::leak(result.into_boxed_str())
-        }
-        Err(_e) => "Error loading permissions",
-    }
-}
-
-struct Database {
-    db_url: String,
-}
+mod models;
+mod routes;
+use models::Database;
+use rocket_okapi::{
+    openapi_get_routes,
+    settings::UrlObject,
+    swagger_ui::{SwaggerUIConfig, make_swagger_ui},
+};
+use routes::{entries::*, permissions::*, person::*};
 
 pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     let app_state = Database {
@@ -69,7 +14,50 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     };
     let build = rocket::build()
         .manage(app_state)
-        .mount("/api", routes![persons, entries, permissions]);
+        .mount(
+            "/api/entries",
+            openapi_get_routes![
+                create_entry,
+                get_entries,
+                get_entry,
+                get_entry_by_person_id,
+                update_entry,
+                delete_entry
+            ],
+        )
+        .mount(
+            "/api/permissions",
+            openapi_get_routes![
+                get_permissions,
+                get_permissions_by_person_id,
+                get_permissions_by_id,
+                create_permissions,
+                update_permissions,
+                delete_permissions
+            ],
+        )
+        .mount(
+            "/api/person",
+            openapi_get_routes![
+                create_person,
+                get_persons,
+                get_person_by_id,
+                update_person,
+                delete_person
+            ],
+        )
+        .mount(
+            "/doc",
+            make_swagger_ui(&SwaggerUIConfig {
+                urls: vec![
+                    UrlObject::new("Person", "/api/person/openapi.json"),
+                    UrlObject::new("Entries", "/api/entries/openapi.json"),
+                    UrlObject::new("Permissions", "/api/permissions/openapi.json"),
+                ],
+
+                ..Default::default()
+            }),
+        );
 
     let _ignite = build.launch().await?;
     Ok(())
