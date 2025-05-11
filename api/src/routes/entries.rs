@@ -1,5 +1,5 @@
 use db::establish_connection;
-use db::interactions::EntriesInteractor;
+use db::interactions::entries::EntriesInteractor;
 use db::models::Entry;
 use rocket::serde::json::Json;
 use rocket::{State, response::content::RawJson};
@@ -33,6 +33,50 @@ pub async fn get_entry_by_person_id(db: &State<Database>, person_id: String) -> 
     let conn = &mut establish_connection(&db.db_url);
     let entry = EntriesInteractor::get_by_p_id(conn, &person_id).unwrap();
     RawJson(serde_json::to_string(&entry).unwrap())
+}
+
+/// Get a single entry by date
+#[openapi(tag = "Entries")]
+#[get("/api/entry/by-date/<date>")]
+pub async fn get_entry_by_date(db: &State<Database>, date: String) -> RawJson<String> {
+    let conn = &mut establish_connection(&db.db_url);
+    let entries = EntriesInteractor::get_by_date(conn, &date).unwrap();
+    RawJson(serde_json::to_string(&entries).unwrap())
+}
+
+/// Get a single entry by date and person ID
+#[openapi(tag = "Entries")]
+#[get("/api/entry/by-date/<date>/<person_id>")]
+pub async fn get_entry_by_date_and_person_id(
+    db: &State<Database>,
+    date: String,
+    person_id: String,
+) -> RawJson<String> {
+    let conn = &mut establish_connection(&db.db_url);
+    let entries = EntriesInteractor::get_by_date_and_p_id(conn, &date, &person_id).unwrap();
+    RawJson(serde_json::to_string(&entries).unwrap())
+}
+
+/// Get a single entry by action
+#[openapi(tag = "Entries")]
+#[get("/api/entry/by-action/<action>")]
+pub async fn get_entry_by_action(db: &State<Database>, action: String) -> RawJson<String> {
+    let conn = &mut establish_connection(&db.db_url);
+    let entries = EntriesInteractor::get_by_action(conn, &action).unwrap();
+    RawJson(serde_json::to_string(&entries).unwrap())
+}
+
+/// Get a single entry by action and person ID
+#[openapi(tag = "Entries")]
+#[get("/api/entry/by-action/<action>/<person_id>")]
+pub async fn get_entry_by_action_and_person_id(
+    db: &State<Database>,
+    action: String,
+    person_id: String,
+) -> RawJson<String> {
+    let conn = &mut establish_connection(&db.db_url);
+    let entries = EntriesInteractor::get_by_action_and_p_id(conn, &action, &person_id).unwrap();
+    RawJson(serde_json::to_string(&entries).unwrap())
 }
 
 /// Create a new entry

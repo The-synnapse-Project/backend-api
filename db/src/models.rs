@@ -1,4 +1,4 @@
-use crate::interactions::Action;
+use crate::interactions::entries::Action;
 use diesel::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

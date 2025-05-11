@@ -1,14 +1,16 @@
+mod cors;
 mod models;
 mod req_logger;
 mod routes;
-use models::Database;
+use crate::cors::CORS;
+use crate::models::Database;
+use crate::routes::{auth::*, entries::*, permissions::*, person::*};
 use req_logger::ReqLogger;
-use rocket::{Request, catch, catchers, http::Status};
+use rocket::{Request, catch, catchers, http::Status, options};
 use rocket_okapi::{
     openapi_get_routes,
     swagger_ui::{SwaggerUIConfig, make_swagger_ui},
 };
-use routes::{entries::*, permissions::*, person::*};
 
 #[catch(404)]
 fn not_found(req: &Request) -> String {
@@ -30,6 +32,11 @@ fn default_catcher(status: Status, req: &Request) -> String {
     )
 }
 
+#[options("/<_..>")]
+fn all_options() -> &'static str {
+    ""
+}
+
 pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     let app_state = Database {
         db_url: db_url.to_string(),
@@ -37,7 +44,9 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     let build = rocket::build()
         .manage(app_state)
         .attach(ReqLogger {})
+        .attach(CORS)
         .register("/", catchers![not_found, default_catcher])
+        .mount("/", rocket::routes![all_options])
         .mount(
             "/",
             openapi_get_routes![
@@ -46,6 +55,10 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
                 get_entries,
                 get_entry,
                 get_entry_by_person_id,
+                get_entry_by_date_and_person_id,
+                get_entry_by_action,
+                get_entry_by_action_and_person_id,
+                get_entry_by_date,
                 update_entry,
                 delete_entry,
                 // Permissions
@@ -60,7 +73,11 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
                 get_persons,
                 get_person_by_id,
                 update_person,
-                delete_person
+                delete_person,
+                // Auth
+                login,
+                register,
+                change_password
             ],
         )
         .mount(

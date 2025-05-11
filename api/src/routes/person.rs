@@ -1,5 +1,5 @@
 use db::establish_connection;
-use db::interactions::PersonInteractor;
+use db::interactions::person::PersonInteractor;
 use db::models::Person;
 use rocket::serde::json::Json;
 use rocket::{State, response::content::RawJson};

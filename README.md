@@ -93,12 +93,14 @@ The project is organized into three distinct crates, each with a specific respon
 
 Currently implemented API routes:
 
+- Person
 - [x] GET `/api/person` - Get all persons
 - [x] GET `/api/person/<person_id>` - Get a single person by ID
 - [x] POST `/api/person` - Create a new person
 - [x] PUT `/api/person/<person_id>` - Update an existing person
 - [x] DELETE `/api/person/<person_id>` - Delete a person
 
+- Entries
 - [x] GET `/api/entries` - Get all entries
 - [x] GET `/api/entries/<entry_id>` - Get a single entry by ID
 - [x] GET `/api/entries/by-person/<person_id>` - Get entries by person ID
@@ -106,6 +108,7 @@ Currently implemented API routes:
 - [x] PUT `/api/entries/<entry_id>` - Update an existing entry
 - [x] DELETE `/api/entries/<entry_id>` - Delete an entry
 
+- Permissions
 - [x] GET `/api/permissions` - Get all permissions
 - [x] GET `/api/permissions/<permission_id>` - Get a single permission by ID
 - [x] GET `/api/permissions/by-person/<person_id>` - Get permissions by person ID

@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Subcommands::Serve { database_url } => api::run_server(&database_url).await?,
         Subcommands::Show { database_url } => {
             let conn = &mut establish_connection(&database_url);
-            let persons = db::interactions::PersonInteractor::get(conn)?;
+            let persons = db::interactions::person::PersonInteractor::get(conn)?;
 
             for p in persons {
                 println!("{}: {} <{}>", p.id, p.name, p.email);

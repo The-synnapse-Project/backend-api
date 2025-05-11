@@ -1,6 +1,6 @@
 use crate::models::Database;
 use db::establish_connection;
-use db::interactions::PermissionsInteractor;
+use db::interactions::permissions::PermissionsInteractor;
 use db::models::Permissions;
 use rocket::serde::json::Json;
 use rocket::{State, response::content::RawJson};

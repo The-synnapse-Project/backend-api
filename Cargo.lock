@@ -95,11 +95,14 @@ dependencies = [
 name = "api"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "db",
  "rocket",
  "rocket_okapi",
+ "schemars",
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
