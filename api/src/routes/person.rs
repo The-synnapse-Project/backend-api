@@ -26,7 +26,7 @@ pub async fn get_person_by_id(db: &State<Database>, person_id: String) -> RawJso
     RawJson(serde_json::to_string(&person).unwrap())
 }
 
-/// Get a single person by ID
+/// Create a new person
 #[openapi(tag = "Persons")]
 #[post("/api/person", format = "json", data = "<person>")]
 pub async fn create_person(db: &State<Database>, person: Json<Person>) -> RawJson<String> {

@@ -1,7 +1,27 @@
+use std::fmt::Display;
+
 use crate::interactions::entries::Action;
-use diesel::prelude::*;
+use diesel::{expression::AsExpression, prelude::*, sql_types::Text};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, AsExpression)]
+#[diesel(sql_type = Text)]
+pub enum Role {
+    Admin,
+    Profesor,
+    Alumno,
+}
+
+impl Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Role::Admin => write!(f, "Admin"),
+            Role::Profesor => write!(f, "Profesor"),
+            Role::Alumno => write!(f, "Alumno"),
+        }
+    }
+}
 
 #[derive(Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema)]
 #[diesel(table_name = crate::schema::person)]
@@ -11,11 +31,12 @@ pub struct Person {
     pub name: String,
     pub surname: String,
     pub email: String,
+    pub role: String,
     pub password_hash: String,
 }
 
 impl Person {
-    pub fn new(name: &str, surname: &str, email: &str, password_hash: &str) -> Self {
+    pub fn new(name: &str, surname: &str, email: &str, role: Role, password_hash: &str) -> Self {
         let name = name.to_string();
         let surname = surname.to_string();
         let email = email.to_string();
@@ -26,6 +47,7 @@ impl Person {
             name,
             surname,
             email,
+            role: role.to_string(),
             password_hash,
         }
     }

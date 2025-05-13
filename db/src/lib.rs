@@ -1,6 +1,8 @@
 use diesel::connection::Connection;
 use diesel::prelude::{PgConnection, SqliteConnection};
 use interactions::{permissions::PermissionsInteractor, person::PersonInteractor};
+use log::{info, debug, error};
+use models::Role;
 use std::env;
 use std::path::Path;
 pub mod crypto;
@@ -15,52 +17,108 @@ pub enum DbConnection {
 
 pub fn establish_connection(db_url: &str) -> DbConnection {
     let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
+    info!("Establishing database connection to: {}", database_url);
     if Path::new(&database_url).exists() {
+        info!("Detected SQLite database");
         return DbConnection::Sqlite(establish_sqlite_connection(&database_url));
     }
     if database_url.starts_with("postgres://") || database_url.starts_with("postgresql://") {
+        info!("Detected PostgreSQL database");
         return DbConnection::Pg(establish_pg_connection(&database_url));
     }
+    log::error!("Invalid database URL: {}", database_url);
     panic!("Invalid database URL: {database_url}");
 }
 
 fn establish_sqlite_connection(db_url: &str) -> SqliteConnection {
     let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
-    SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {database_url}"))
+    info!("Connecting to SQLite database at: {}", database_url);
+    match SqliteConnection::establish(&database_url) {
+        Ok(conn) => {
+            info!("Successfully connected to SQLite database");
+            conn
+        }
+        Err(e) => {
+            log::error!("Failed to connect to SQLite database at {}: {}", database_url, e);
+            panic!("Error connecting to {database_url}: {}", e);
+        }
+    }
 }
 
 fn establish_pg_connection(db_url: &str) -> PgConnection {
     let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {database_url}"))
+    info!("Connecting to PostgreSQL database at: {}", database_url);
+    match PgConnection::establish(&database_url) {
+        Ok(conn) => {
+            info!("Successfully connected to PostgreSQL database");
+            conn
+        }
+        Err(e) => {
+            log::error!("Failed to connect to PostgreSQL database at {}: {}", database_url, e);
+            panic!("Error connecting to {database_url}: {}", e);
+        }
+    }
 }
 
 pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Seeding database...");
     let connection = &mut establish_connection(db_url);
+    
+    debug!("Creating admin user");
     let person = models::Person::new(
         "Admin",
         "Admin",
         "admin@cpiftlosenlaces.com",
+        Role::Admin,
         &crypto::to_hash("admin"),
     );
 
     let permission = models::Permissions::new(&person.id, true, true, true, true, true);
-    PersonInteractor::new(connection, &person)?;
-    PermissionsInteractor::new(connection, &permission)?;
+    match PersonInteractor::new(connection, &person) {
+        Ok(_) => info!("Admin user created with ID: {}", person.id),
+        Err(e) => {
+            error!("Failed to create admin user: {}", e);
+            return Err(Box::new(e));
+        }
+    };
+    
+    match PermissionsInteractor::new(connection, &permission) {
+        Ok(_) => info!("Admin permissions created for user ID: {}", person.id),
+        Err(e) => {
+            error!("Failed to create admin permissions: {}", e);
+            return Err(Box::new(e));
+        }
+    };
 
+    info!("Creating 10 regular users");
     for i in 0..10 {
+        debug!("Creating user {}", i);
         let person = models::Person::new(
             &format!("User {i}"),
             "User",
             &format!("user{i}@example.com"),
+            Role::Alumno,
             &crypto::to_hash(&format!("user{i}")),
         );
 
         let permission = models::Permissions::new(&person.id, true, true, true, true, true);
-        PersonInteractor::new(connection, &person)?;
-        PermissionsInteractor::new(connection, &permission)?;
+        match PersonInteractor::new(connection, &person) {
+            Ok(_) => debug!("User {} created with ID: {}", i, person.id),
+            Err(e) => {
+                error!("Failed to create user {}: {}", i, e);
+                return Err(Box::new(e));
+            }
+        };
+        
+        match PermissionsInteractor::new(connection, &permission) {
+            Ok(_) => debug!("Permissions created for user {} with ID: {}", i, person.id),
+            Err(e) => {
+                error!("Failed to create permissions for user {}: {}", i, e);
+                return Err(Box::new(e));
+            }
+        };
     }
 
+    info!("Database seeded successfully with 11 users");
     Ok(())
 }

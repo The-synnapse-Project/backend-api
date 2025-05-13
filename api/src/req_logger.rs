@@ -1,6 +1,13 @@
+use std::{collections::HashMap, time::Instant};
+
+use log::info;
+use once_cell::sync::Lazy;
 use rocket::{Data, Orbit, Request, Response, Rocket, fairing::Fairing};
+use std::sync::Mutex;
 
 pub struct ReqLogger {}
+
+static TIMINGS: Lazy<Mutex<HashMap<String, Instant>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 #[rocket::async_trait]
 impl Fairing for ReqLogger {
@@ -12,12 +19,24 @@ impl Fairing for ReqLogger {
     }
 
     async fn on_liftoff(&self, _rocket: &Rocket<Orbit>) {
-        println!("Rocket api running");
+        info!("Rocket api running");
     }
 
     async fn on_request(&self, req: &mut Request<'_>, _data: &mut Data<'_>) {
-        println!(
+        let now = Instant::now();
+        let id = format!(
             "{} {} {}",
+            req.method(),
+            req.uri(),
+            if let Some(ip) = req.client_ip() {
+                ip.to_string()
+            } else {
+                "unknown".to_string()
+            }
+        );
+        TIMINGS.lock().unwrap().insert(id.clone(), now);
+        info!(
+            "Request: {} {} from {}",
             req.method(),
             req.uri(),
             if let Some(ip) = req.client_ip() {
@@ -28,11 +47,39 @@ impl Fairing for ReqLogger {
         );
     }
 
-    async fn on_response<'r>(&self, _req: &'r Request<'_>, _res: &mut Response<'r>) {
-        println!("Response: {} {}", _req.method(), _req.uri());
+    async fn on_response<'r>(&self, req: &'r Request<'_>, res: &mut Response<'r>) {
+        let now = Instant::now();
+        let id = format!(
+            "{} {} {}",
+            req.method(),
+            req.uri(),
+            if let Some(ip) = req.client_ip() {
+                ip.to_string()
+            } else {
+                "unknown".to_string()
+            }
+        );
+        let mut msg = format!(
+            "{} {} {} {}",
+            req.method(),
+            req.uri(),
+            if let Some(ip) = req.client_ip() {
+                ip.to_string()
+            } else {
+                "unknown".to_string()
+            },
+            res.status()
+        );
+        if let Ok(mut lock) = TIMINGS.lock() {
+            if let Some(start_time) = lock.remove(&id) {
+                let duration = now.duration_since(start_time);
+                msg.push_str(&format!(" {}ms", duration.as_millis()));
+            }
+        }
+        info!("Response: {msg}");
     }
 
     async fn on_shutdown(&self, _rocket: &Rocket<Orbit>) {
-        println!("Shutting down");
+        info!("Shutting down");
     }
 }

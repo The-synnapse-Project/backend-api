@@ -27,12 +27,9 @@ diesel::table! {
         name -> Text,
         surname -> Text,
         email -> Text,
+        role -> Text,
         password_hash -> Text,
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    entries,
-    permissions,
-    person,
-);
+diesel::allow_tables_to_appear_in_same_query!(entries, permissions, person,);

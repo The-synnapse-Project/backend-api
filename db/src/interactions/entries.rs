@@ -71,8 +71,9 @@ impl EntriesInteractor {
 
     pub fn get_by_date(conn: &mut DbConnection, date: &str) -> QueryResult<Vec<models::Entry>> {
         use crate::schema::entries::dsl::*;
-
-        let req_instant = chrono::NaiveDateTime::parse_from_str(date, "%d-%m-%Y").unwrap();
+        let req_instant =
+            chrono::NaiveDateTime::parse_from_str(&format!("{date} 00:00:00"), "%Y-%m-%d %H:%M:%S")
+                .unwrap();
         match conn {
             DbConnection::Sqlite(conn) => entries
                 .filter(instant.lt(req_instant))

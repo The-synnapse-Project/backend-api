@@ -2,9 +2,11 @@ mod cors;
 mod models;
 mod req_logger;
 mod routes;
+
 use crate::cors::CORS;
 use crate::models::Database;
-use crate::routes::{auth::*, entries::*, permissions::*, person::*};
+use crate::routes::{auth::*, entries::*, misc::*, permissions::*, person::*};
+use log::{error, info, warn};
 use req_logger::ReqLogger;
 use rocket::{Request, catch, catchers, http::Status, options};
 use rocket_okapi::{
@@ -14,7 +16,7 @@ use rocket_okapi::{
 
 #[catch(404)]
 fn not_found(req: &Request) -> String {
-    println!("Not found: {} {}", req.method(), req.uri());
+    warn!("Not found: {} {}", req.method(), req.uri());
     format!(
         "The requested URL {} was not found on this server.",
         req.uri()
@@ -23,7 +25,7 @@ fn not_found(req: &Request) -> String {
 
 #[catch(default)]
 fn default_catcher(status: Status, req: &Request) -> String {
-    println!("Default catcher: {} {} {}", status, req.method(), req.uri());
+    error!("Error: {} {} {}", status, req.method(), req.uri());
     format!(
         "An error occurred: {} {} {}",
         status,
@@ -38,6 +40,9 @@ fn all_options() -> &'static str {
 }
 
 pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
+    // Initialize WebSocketManager
+    info!("Starting server with database: {}", db_url);
+
     let app_state = Database {
         db_url: db_url.to_string(),
     };
@@ -77,7 +82,9 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
                 // Auth
                 login,
                 register,
-                change_password
+                change_password,
+                // Misc
+                health_check,
             ],
         )
         .mount(
@@ -89,6 +96,8 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
             }),
         );
 
+    info!("Launching Rocket server...");
     let _ignite = build.launch().await?;
+    info!("Server shutdown");
     Ok(())
 }

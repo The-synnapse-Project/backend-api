@@ -7,7 +7,6 @@ use rocket::{delete, get, post, put};
 use rocket_okapi::openapi;
 
 use crate::models::Database;
-
 /// Get all entries
 #[openapi(tag = "Entries")]
 #[get("/api/entry")]

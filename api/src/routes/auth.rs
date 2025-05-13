@@ -5,7 +5,6 @@ use rocket::{State, post};
 use rocket_okapi::openapi;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct Login {
@@ -46,18 +45,26 @@ pub async fn register(db: &State<Database>, register: Json<Register>) -> RawJson
     }
 
     // Create the new person
-    let person = db::models::Person {
-        id: Uuid::new_v4().to_string(),
-        name: register.name.clone(),
-        surname: register.surname.clone(),
-        email: register.email.clone(),
-        password_hash: db::crypto::to_hash(&register.password),
-    };
+    let person = db::models::Person::new(
+        &register.name,
+        &register.surname,
+        &register.email,
+        db::models::Role::Alumno,
+        &db::crypto::to_hash(&register.password),
+    );
 
     // Insert the new person
     if let Err(e) = db::interactions::person::PersonInteractor::new(conn, &person) {
         return RawJson(format!(
             "{{\"status\":\"error\",\"message\":\"Failed to create user: {e}\"}}"
+        ));
+    }
+
+    let permissions = db::models::Permissions::new(&person.id, true, false, true, false, false);
+
+    if let Err(e) = db::interactions::permissions::PermissionsInteractor::new(conn, &permissions) {
+        return RawJson(format!(
+            "{{\"status\":\"error\",\"message\":\"Failed to create permissions: {e}\"}}"
         ));
     }
 

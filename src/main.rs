@@ -1,5 +1,7 @@
 use clap::Parser;
 use db::establish_connection;
+use fstdout_logger::{LoggerConfig, init_logger_with_config};
+use log::{debug, error, info, warn};
 
 #[derive(Parser)]
 #[command(
@@ -38,20 +40,59 @@ enum Subcommands {
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if let Err(e) = init_logger_with_config(
+        Some("latest.log"),
+        LoggerConfig::builder()
+            .show_file_info(cfg!(debug_assertions))
+            .level(log::LevelFilter::Warn)
+            .build(),
+    ) {
+        eprintln!("Failed to initialize logger: {}", e);
+        return Err(Box::new(e) as Box<dyn std::error::Error>);
+    }
+
+    info!("Starting synnapse-db-api-cli");
+    debug!("Logger initialized");
+
     let args = CliArgs::parse();
     match args.action {
-        Subcommands::Serve { database_url } => api::run_server(&database_url).await?,
+        Subcommands::Serve { database_url } => {
+            info!("Starting server with database at: {}", database_url);
+            if let Err(e) = api::run_server(&database_url).await {
+                error!("Server error: {}", e);
+                return Err(e.into());
+            }
+            info!("Server shut down gracefully");
+        }
         Subcommands::Show { database_url } => {
+            info!("Showing database contents from: {}", database_url);
             let conn = &mut establish_connection(&database_url);
-            let persons = db::interactions::person::PersonInteractor::get(conn)?;
-
-            for p in persons {
-                println!("{}: {} <{}>", p.id, p.name, p.email);
+            match db::interactions::person::PersonInteractor::get(conn) {
+                Ok(persons) => {
+                    if persons.is_empty() {
+                        warn!("No persons found in database");
+                    } else {
+                        info!("Found {} persons in database", persons.len());
+                        for p in persons {
+                            info!("{}: {} <{}>", p.id, p.name, p.email);
+                        }
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to retrieve persons: {}", e);
+                    return Err(e.into());
+                }
             }
         }
         Subcommands::Seed { database_url } => {
-            db::seed(&database_url)?;
+            info!("Seeding database at: {}", database_url);
+            if let Err(e) = db::seed(&database_url) {
+                error!("Failed to seed database: {}", e);
+                return Err(e.into());
+            }
+            info!("Database seeded successfully");
         }
     }
+    info!("Program completed successfully");
     Ok(())
 }
