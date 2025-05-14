@@ -21,9 +21,9 @@ pub async fn login(db: &State<Database>, login: Json<Login>) -> RawJson<String> 
         if db::crypto::check_hash(&login.password, &person.password_hash) {
             return RawJson("{\"status\":\"ok\"}".into());
         }
-        return RawJson("{\"status\":\"Invalid Password\"}".into());
+        return RawJson("{\"status\":\"error\",\"message\":\"Invalid Password\"}".into());
     }
-    RawJson("{\"status\":\"Invalid Email\"}".into())
+    RawJson("{\"status\":\"error\",\"message\":\"Invalid Email\"}".into())
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]

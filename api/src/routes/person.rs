@@ -13,8 +13,10 @@ use crate::models::Database;
 #[get("/api/person")]
 pub async fn get_persons(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let persons = PersonInteractor::get(conn).unwrap();
-    RawJson(serde_json::to_string(&persons).unwrap())
+    match PersonInteractor::get(conn) {
+        Ok(persons) => RawJson(serde_json::to_string(&persons).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Failed to retrieve persons\"}".to_string()),
+    }
 }
 
 /// Get a single person by ID
@@ -22,8 +24,10 @@ pub async fn get_persons(db: &State<Database>) -> RawJson<String> {
 #[get("/api/person/<person_id>")]
 pub async fn get_person_by_id(db: &State<Database>, person_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let person = PersonInteractor::get_by_id(conn, &person_id).unwrap();
-    RawJson(serde_json::to_string(&person).unwrap())
+    match PersonInteractor::get_by_id(conn, &person_id) {
+        Ok(person) => RawJson(serde_json::to_string(&person).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found\"}".to_string()),
+    }
 }
 
 /// Create a new person
@@ -31,8 +35,10 @@ pub async fn get_person_by_id(db: &State<Database>, person_id: String) -> RawJso
 #[post("/api/person", format = "json", data = "<person>")]
 pub async fn create_person(db: &State<Database>, person: Json<Person>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let new_person = PersonInteractor::new(conn, &person).unwrap();
-    RawJson(serde_json::to_string(&new_person).unwrap())
+    match PersonInteractor::new(conn, &person) {
+        Ok(new_person) => RawJson(serde_json::to_string(&new_person).unwrap()),
+        Err(e) => RawJson(format!("{{\"status\": \"error\", \"message\": \"Failed to create person: {}\"}}", e)),
+    }
 }
 
 /// Update an existing person
@@ -44,8 +50,10 @@ pub async fn update_person(
     person: Json<Person>,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let updated_person = PersonInteractor::update(conn, &person_id, &person).unwrap();
-    RawJson(serde_json::to_string(&updated_person).unwrap())
+    match PersonInteractor::update(conn, &person_id, &person) {
+        Ok(updated_person) => RawJson(serde_json::to_string(&updated_person).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found or update failed\"}".to_string()),
+    }
 }
 
 /// Delete a person
@@ -53,6 +61,8 @@ pub async fn update_person(
 #[delete("/api/person/<person_id>")]
 pub async fn delete_person(db: &State<Database>, person_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let deleted_person = PersonInteractor::delete(conn, &person_id).unwrap();
-    RawJson(serde_json::to_string(&deleted_person).unwrap())
+    match PersonInteractor::delete(conn, &person_id) {
+        Ok(deleted_person) => RawJson(serde_json::to_string(&deleted_person).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found or delete failed\"}".to_string()),
+    }
 }

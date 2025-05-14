@@ -12,8 +12,10 @@ use rocket_okapi::openapi;
 #[get("/api/permission")]
 pub async fn get_permissions(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let permissions = PermissionsInteractor::get(conn).unwrap();
-    RawJson(serde_json::to_string(&permissions).unwrap())
+    match PermissionsInteractor::get(conn) {
+        Ok(permissions) => RawJson(serde_json::to_string(&permissions).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Failed to retrieve permissions\"}".to_string()),
+    }
 }
 
 /// Get a single permission by ID
@@ -24,8 +26,10 @@ pub async fn get_permissions_by_person_id(
     person_id: String,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let permissions = PermissionsInteractor::get_by_p_id(conn, &person_id).unwrap();
-    RawJson(serde_json::to_string(&permissions).unwrap())
+    match PermissionsInteractor::get_by_p_id(conn, &person_id) {
+        Ok(permissions) => RawJson(serde_json::to_string(&permissions).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Permissions not found for this person\"}".to_string()),
+    }
 }
 
 /// Get a single permission by ID
@@ -33,8 +37,10 @@ pub async fn get_permissions_by_person_id(
 #[get("/api/permission/<permission_id>")]
 pub async fn get_permissions_by_id(db: &State<Database>, permission_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let permissions = PermissionsInteractor::get_by_id(conn, &permission_id).unwrap();
-    RawJson(serde_json::to_string(&permissions).unwrap())
+    match PermissionsInteractor::get_by_id(conn, &permission_id) {
+        Ok(permissions) => RawJson(serde_json::to_string(&permissions).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Permission not found\"}".to_string()),
+    }
 }
 /// Create a new permission
 #[openapi(tag = "Permissions")]
@@ -44,8 +50,10 @@ pub async fn create_permissions(
     permissions: Json<Permissions>,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let new_permissions = PermissionsInteractor::new(conn, &permissions).unwrap();
-    RawJson(serde_json::to_string(&new_permissions).unwrap())
+    match PermissionsInteractor::new(conn, &permissions) {
+        Ok(new_permissions) => RawJson(serde_json::to_string(&new_permissions).unwrap()),
+        Err(e) => RawJson(format!("{{\"status\": \"error\", \"message\": \"Failed to create permissions: {}\"}}", e)),
+    }
 }
 
 /// Update an existing permission
@@ -61,9 +69,10 @@ pub async fn update_permissions(
     permissions: Json<Permissions>,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let updated_permissions =
-        PermissionsInteractor::update(conn, &permission_id, &permissions).unwrap();
-    RawJson(serde_json::to_string(&updated_permissions).unwrap())
+    match PermissionsInteractor::update(conn, &permission_id, &permissions) {
+        Ok(updated_permissions) => RawJson(serde_json::to_string(&updated_permissions).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Permission not found or update failed\"}".to_string()),
+    }
 }
 
 /// Delete a permission
@@ -71,6 +80,8 @@ pub async fn update_permissions(
 #[delete("/api/permission/<permission_id>")]
 pub async fn delete_permissions(db: &State<Database>, permission_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let deleted_permissions = PermissionsInteractor::delete(conn, &permission_id).unwrap();
-    RawJson(serde_json::to_string(&deleted_permissions).unwrap())
+    match PermissionsInteractor::delete(conn, &permission_id) {
+        Ok(deleted_permissions) => RawJson(serde_json::to_string(&deleted_permissions).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Permission not found or delete failed\"}".to_string()),
+    }
 }

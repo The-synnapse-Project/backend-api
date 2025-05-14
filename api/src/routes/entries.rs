@@ -12,8 +12,10 @@ use crate::models::Database;
 #[get("/api/entry")]
 pub async fn get_entries(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entries = EntriesInteractor::get(conn).unwrap();
-    RawJson(serde_json::to_string(&entries).unwrap())
+    match EntriesInteractor::get(conn) {
+        Ok(entries) => RawJson(serde_json::to_string(&entries).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Failed to retrieve entries\"}".to_string()),
+    }
 }
 
 /// Get a single entry by ID
@@ -21,8 +23,10 @@ pub async fn get_entries(db: &State<Database>) -> RawJson<String> {
 #[get("/api/entry/<entry_id>")]
 pub async fn get_entry(db: &State<Database>, entry_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entry = EntriesInteractor::get_by_id(conn, &entry_id).unwrap();
-    RawJson(serde_json::to_string(&entry).unwrap())
+    match EntriesInteractor::get_by_id(conn, &entry_id) {
+        Ok(entry) => RawJson(serde_json::to_string(&entry).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Entry not found\"}".to_string()),
+    }
 }
 
 /// Get a single entry by person ID
@@ -30,8 +34,10 @@ pub async fn get_entry(db: &State<Database>, entry_id: String) -> RawJson<String
 #[get("/api/entry/by-person/<person_id>")]
 pub async fn get_entry_by_person_id(db: &State<Database>, person_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entry = EntriesInteractor::get_by_p_id(conn, &person_id).unwrap();
-    RawJson(serde_json::to_string(&entry).unwrap())
+    match EntriesInteractor::get_by_p_id(conn, &person_id) {
+        Ok(entry) => RawJson(serde_json::to_string(&entry).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"No entries found for this person\"}".to_string()),
+    }
 }
 
 /// Get a single entry by date
@@ -39,8 +45,10 @@ pub async fn get_entry_by_person_id(db: &State<Database>, person_id: String) -> 
 #[get("/api/entry/by-date/<date>")]
 pub async fn get_entry_by_date(db: &State<Database>, date: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entries = EntriesInteractor::get_by_date(conn, &date).unwrap();
-    RawJson(serde_json::to_string(&entries).unwrap())
+    match EntriesInteractor::get_by_date(conn, &date) {
+        Ok(entries) => RawJson(serde_json::to_string(&entries).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"No entries found for this date\"}".to_string()),
+    }
 }
 
 /// Get a single entry by date and person ID
@@ -52,8 +60,10 @@ pub async fn get_entry_by_date_and_person_id(
     person_id: String,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entries = EntriesInteractor::get_by_date_and_p_id(conn, &date, &person_id).unwrap();
-    RawJson(serde_json::to_string(&entries).unwrap())
+    match EntriesInteractor::get_by_date_and_p_id(conn, &date, &person_id) {
+        Ok(entries) => RawJson(serde_json::to_string(&entries).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"No entries found for this date and person\"}".to_string()),
+    }
 }
 
 /// Get a single entry by action
@@ -61,8 +71,10 @@ pub async fn get_entry_by_date_and_person_id(
 #[get("/api/entry/by-action/<action>")]
 pub async fn get_entry_by_action(db: &State<Database>, action: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entries = EntriesInteractor::get_by_action(conn, &action).unwrap();
-    RawJson(serde_json::to_string(&entries).unwrap())
+    match EntriesInteractor::get_by_action(conn, &action) {
+        Ok(entries) => RawJson(serde_json::to_string(&entries).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"No entries found for this action\"}".to_string()),
+    }
 }
 
 /// Get a single entry by action and person ID
@@ -74,8 +86,10 @@ pub async fn get_entry_by_action_and_person_id(
     person_id: String,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let entries = EntriesInteractor::get_by_action_and_p_id(conn, &action, &person_id).unwrap();
-    RawJson(serde_json::to_string(&entries).unwrap())
+    match EntriesInteractor::get_by_action_and_p_id(conn, &action, &person_id) {
+        Ok(entries) => RawJson(serde_json::to_string(&entries).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"No entries found for this action and person\"}".to_string()),
+    }
 }
 
 /// Create a new entry
@@ -83,8 +97,10 @@ pub async fn get_entry_by_action_and_person_id(
 #[post("/api/entry", format = "json", data = "<entry>")]
 pub async fn create_entry(db: &State<Database>, entry: Json<Entry>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let new_entry = EntriesInteractor::new(conn, &entry).unwrap();
-    RawJson(serde_json::to_string(&new_entry).unwrap())
+    match EntriesInteractor::new(conn, &entry) {
+        Ok(new_entry) => RawJson(serde_json::to_string(&new_entry).unwrap()),
+        Err(e) => RawJson(format!("{{\"status\": \"error\", \"message\": \"Failed to create entry: {}\"}}", e)),
+    }
 }
 
 /// Update an existing entry
@@ -96,8 +112,10 @@ pub async fn update_entry(
     entry: Json<Entry>,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let updated_entry = EntriesInteractor::update(conn, &entry_id, &entry).unwrap();
-    RawJson(serde_json::to_string(&updated_entry).unwrap())
+    match EntriesInteractor::update(conn, &entry_id, &entry) {
+        Ok(updated_entry) => RawJson(serde_json::to_string(&updated_entry).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Entry not found or update failed\"}".to_string()),
+    }
 }
 
 /// Delete an entry
@@ -105,6 +123,8 @@ pub async fn update_entry(
 #[delete("/api/entry/<entry_id>")]
 pub async fn delete_entry(db: &State<Database>, entry_id: String) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
-    let deleted_entry = EntriesInteractor::delete(conn, &entry_id).unwrap();
-    RawJson(serde_json::to_string(&deleted_entry).unwrap())
+    match EntriesInteractor::delete(conn, &entry_id) {
+        Ok(deleted_entry) => RawJson(serde_json::to_string(&deleted_entry).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Entry not found or delete failed\"}".to_string()),
+    }
 }
