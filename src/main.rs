@@ -1,7 +1,9 @@
+use std::env;
+
 use clap::Parser;
 use db::establish_connection;
 use fstdout_logger::{LoggerConfig, init_logger_with_config};
-use log::{debug, error, info, warn};
+use log::{LevelFilter, debug, error, info, warn};
 
 #[derive(Parser)]
 #[command(
@@ -40,11 +42,25 @@ enum Subcommands {
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let log_level = match env::var("SYN_LOG_LEVEL") {
+        Ok(level) => match level.parse::<u8>() {
+            Ok(level) => match level {
+                0 => LevelFilter::Off,
+                1 => LevelFilter::Error,
+                2 => LevelFilter::Warn,
+                3 => LevelFilter::Info,
+                4 => LevelFilter::Debug,
+                _ => LevelFilter::Trace,
+            },
+            Err(_) => LevelFilter::Warn,
+        },
+        Err(_) => LevelFilter::Warn,
+    };
     if let Err(e) = init_logger_with_config(
         Some("latest.log"),
         LoggerConfig::builder()
             .show_file_info(cfg!(debug_assertions))
-            .level(log::LevelFilter::Warn)
+            .level(log_level)
             .build(),
     ) {
         eprintln!("Failed to initialize logger: {}", e);
@@ -88,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             info!("Seeding database at: {}", database_url);
             if let Err(e) = db::seed(&database_url) {
                 error!("Failed to seed database: {}", e);
-                return Err(e.into());
+                return Err(e);
             }
             info!("Database seeded successfully");
         }

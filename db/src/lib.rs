@@ -68,7 +68,7 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let person = models::Person::new(
         "Admin",
         "Admin",
-        "admin@cpiftlosenlaces.com",
+        "admin@cpifplosenlaces.com",
         Role::Admin,
         &crypto::to_hash("admin"),
     );

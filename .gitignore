@@ -2,3 +2,4 @@
 result*
 /.direnv/
 test.db
+*.log
