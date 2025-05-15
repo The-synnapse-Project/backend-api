@@ -20,5 +20,5 @@ pub async fn health_check(db: &State<Database>) -> RawJson<String> {
             ));
         }
     };
-    RawJson("{{\"status\": \"ok\", \"db_status\": \"ok\"}}".to_string())
+    RawJson("{\"status\": \"ok\", \"db_status\": \"ok\"}".to_string())
 }
