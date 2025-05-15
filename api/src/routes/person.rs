@@ -15,7 +15,9 @@ pub async fn get_persons(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PersonInteractor::get(conn) {
         Ok(persons) => RawJson(serde_json::to_string(&persons).unwrap()),
-        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Failed to retrieve persons\"}".to_string()),
+        Err(_) => RawJson(
+            "{\"status\": \"error\", \"message\": \"Failed to retrieve persons\"}".to_string(),
+        ),
     }
 }
 
@@ -37,7 +39,10 @@ pub async fn create_person(db: &State<Database>, person: Json<Person>) -> RawJso
     let conn = &mut establish_connection(&db.db_url);
     match PersonInteractor::new(conn, &person) {
         Ok(new_person) => RawJson(serde_json::to_string(&new_person).unwrap()),
-        Err(e) => RawJson(format!("{{\"status\": \"error\", \"message\": \"Failed to create person: {}\"}}", e)),
+        Err(e) => RawJson(format!(
+            "{{\"status\": \"error\", \"message\": \"Failed to create person: {}\"}}",
+            e
+        )),
     }
 }
 
@@ -52,7 +57,10 @@ pub async fn update_person(
     let conn = &mut establish_connection(&db.db_url);
     match PersonInteractor::update(conn, &person_id, &person) {
         Ok(updated_person) => RawJson(serde_json::to_string(&updated_person).unwrap()),
-        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found or update failed\"}".to_string()),
+        Err(_) => RawJson(
+            "{\"status\": \"error\", \"message\": \"Person not found or update failed\"}"
+                .to_string(),
+        ),
     }
 }
 
@@ -63,6 +71,9 @@ pub async fn delete_person(db: &State<Database>, person_id: String) -> RawJson<S
     let conn = &mut establish_connection(&db.db_url);
     match PersonInteractor::delete(conn, &person_id) {
         Ok(deleted_person) => RawJson(serde_json::to_string(&deleted_person).unwrap()),
-        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found or delete failed\"}".to_string()),
+        Err(_) => RawJson(
+            "{\"status\": \"error\", \"message\": \"Person not found or delete failed\"}"
+                .to_string(),
+        ),
     }
 }

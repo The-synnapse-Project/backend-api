@@ -1,7 +1,7 @@
 use diesel::connection::Connection;
 use diesel::prelude::{PgConnection, SqliteConnection};
 use interactions::{permissions::PermissionsInteractor, person::PersonInteractor};
-use log::{info, debug, error};
+use log::{debug, error, info};
 use models::Role;
 use std::env;
 use std::path::Path;
@@ -39,7 +39,11 @@ fn establish_sqlite_connection(db_url: &str) -> SqliteConnection {
             conn
         }
         Err(e) => {
-            log::error!("Failed to connect to SQLite database at {}: {}", database_url, e);
+            log::error!(
+                "Failed to connect to SQLite database at {}: {}",
+                database_url,
+                e
+            );
             panic!("Error connecting to {database_url}: {}", e);
         }
     }
@@ -54,7 +58,11 @@ fn establish_pg_connection(db_url: &str) -> PgConnection {
             conn
         }
         Err(e) => {
-            log::error!("Failed to connect to PostgreSQL database at {}: {}", database_url, e);
+            log::error!(
+                "Failed to connect to PostgreSQL database at {}: {}",
+                database_url,
+                e
+            );
             panic!("Error connecting to {database_url}: {}", e);
         }
     }
@@ -63,7 +71,7 @@ fn establish_pg_connection(db_url: &str) -> PgConnection {
 pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
     info!("Seeding database...");
     let connection = &mut establish_connection(db_url);
-    
+
     debug!("Creating admin user");
     let person = models::Person::new(
         "Admin",
@@ -81,7 +89,7 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
             return Err(Box::new(e));
         }
     };
-    
+
     match PermissionsInteractor::new(connection, &permission) {
         Ok(_) => info!("Admin permissions created for user ID: {}", person.id),
         Err(e) => {
@@ -109,7 +117,7 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
                 return Err(Box::new(e));
             }
         };
-        
+
         match PermissionsInteractor::new(connection, &permission) {
             Ok(_) => debug!("Permissions created for user {} with ID: {}", i, person.id),
             Err(e) => {
