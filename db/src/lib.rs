@@ -3,7 +3,6 @@ use diesel::prelude::{PgConnection, SqliteConnection};
 use interactions::{permissions::PermissionsInteractor, person::PersonInteractor};
 use log::{debug, error, info};
 use models::Role;
-use std::env;
 use std::path::Path;
 pub mod crypto;
 pub mod interactions;
@@ -16,7 +15,7 @@ pub enum DbConnection {
 }
 
 pub fn establish_connection(db_url: &str) -> DbConnection {
-    let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
+    let database_url = db_url.to_string();
     info!("Establishing database connection to: {}", database_url);
     if Path::new(&database_url).exists() {
         info!("Detected SQLite database");
@@ -31,7 +30,7 @@ pub fn establish_connection(db_url: &str) -> DbConnection {
 }
 
 fn establish_sqlite_connection(db_url: &str) -> SqliteConnection {
-    let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
+    let database_url = db_url.to_string();
     info!("Connecting to SQLite database at: {}", database_url);
     match SqliteConnection::establish(&database_url) {
         Ok(conn) => {
@@ -50,7 +49,7 @@ fn establish_sqlite_connection(db_url: &str) -> SqliteConnection {
 }
 
 fn establish_pg_connection(db_url: &str) -> PgConnection {
-    let database_url = env::var("DATABASE_URL").unwrap_or(db_url.to_string());
+    let database_url = db_url.to_string();
     info!("Connecting to PostgreSQL database at: {}", database_url);
     match PgConnection::establish(&database_url) {
         Ok(conn) => {

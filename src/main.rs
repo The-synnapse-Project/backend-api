@@ -92,6 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             return Err(e.into());
                         }
                         info!("Server shut down gracefully");
+                        return Ok(());
                     } else {
                         warn!("No DATABASE_URL found in environment");
                     }
