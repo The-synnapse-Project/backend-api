@@ -46,6 +46,7 @@ COPY --from=builder /app/target/release/synnapse-db-api-cli .
 COPY bridge/db/migrations ./db/migrations
 COPY --from=builder /usr/local/bin/diesel /usr/local/bin/diesel
 RUN echo "[migrations_directory]\ndir = \"db/migrations\"" >> diesel.toml
+COPY .env .
 
 # Entrypoint: seed the database, then run the API server
 # Expects DATABASE_URL env var to be set (e.g., postgres://user:pass@db:5432/dbname)
@@ -53,7 +54,7 @@ ENV RUST_LOG=info
 ENV ROCKET_ADDRESS=0.0.0.0
 ENV ROCKET_PORT=8000
 
-ENTRYPOINT ["/bin/sh", "-c", "diesel migration run --database-url \"$DATABASE_URL\" || true && ./synnapse-db-api-cli seed \"$DATABASE_URL\" || true && exec ./synnapse-db-api-cli serve \"$DATABASE_URL\""]
+ENTRYPOINT ["/bin/sh", "-c", "diesel migration run || true && ./synnapse-db-api-cli seed || true && exec ./synnapse-db-api-cli serve"]
 
 # Expose the port Rocket uses by default
 EXPOSE 8000
