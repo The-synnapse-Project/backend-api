@@ -56,8 +56,7 @@ ENV RUST_LOG=info
 ENV ROCKET_ADDRESS=0.0.0.0
 ENV ROCKET_PORT=8000
 
-ENTRYPOINT ["sh", "-c", "diesel migration redo --database-url \"$DATABASE_URL\" || true && ./synnapse-db-api-cli seed \"$DATABASE_URL\" || true && ./synnapse-db-api-cli serve \"$DATABASE_URL\""]
-
+ENTRYPOINT ["/bin/sh", "-c", "diesel migration run --database-url \"$DATABASE_URL\" || true && ./synnapse-db-api-cli seed \"$DATABASE_URL\" || true && exec ./synnapse-db-api-cli serve \"$DATABASE_URL\""]
 
 # Expose the port Rocket uses by default
 EXPOSE 8000
