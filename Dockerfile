@@ -46,7 +46,7 @@ COPY --from=builder /app/target/release/synnapse-db-api-cli .
 COPY backend-api/db/migrations ./db/migrations
 COPY --from=builder /usr/local/bin/diesel /usr/local/bin/diesel
 RUN echo "[migrations_directory]\ndir = \"db/migrations\"" >> diesel.toml
-COPY .env .
+COPY ./backend-api/.env .
 
 # Entrypoint: seed the database, then run the API server
 # Expects DATABASE_URL env var to be set (e.g., postgres://user:pass@db:5432/dbname)
