@@ -16,17 +16,17 @@ RUN tar -xf diesel.tar.xz -C /usr/local/bin --strip-components=1
 RUN rm diesel.tar.xz
 
 # Cache dependencies
-COPY bridge/Cargo.toml bridge/Cargo.lock ./
-COPY bridge/api/Cargo.toml api/
-COPY bridge/db/Cargo.toml db/
+COPY backend-api/Cargo.toml backend-api/Cargo.lock ./
+COPY backend-api/api/Cargo.toml api/
+COPY backend-api/db/Cargo.toml db/
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release || true
 
 # Copy source code
 RUN mkdir -p api/src src db/src
-COPY bridge/src src
-COPY bridge/api/src api/src
-COPY bridge/db/src db/src
+COPY backend-api/src src
+COPY backend-api/api/src api/src
+COPY backend-api/db/src db/src
 
 # Build the actual binary
 RUN cargo build --release
@@ -43,7 +43,7 @@ WORKDIR /app
 
 # Copy the compiled binary and migrations
 COPY --from=builder /app/target/release/synnapse-db-api-cli .
-COPY bridge/db/migrations ./db/migrations
+COPY backend-api/db/migrations ./db/migrations
 COPY --from=builder /usr/local/bin/diesel /usr/local/bin/diesel
 RUN echo "[migrations_directory]\ndir = \"db/migrations\"" >> diesel.toml
 COPY .env .
