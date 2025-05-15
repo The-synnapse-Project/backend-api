@@ -10,6 +10,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends pkg-config libpq-dev libsqlite3-dev ca-certificates curl xz-utils && \
     rm -rf /var/lib/apt/lists/*
 
+# Install diesel CLI for migrations
+RUN curl -SsL https://github.com/diesel-rs/diesel/releases/download/v2.2.10/diesel_cli-x86_64-unknown-linux-gnu.tar.xz -o diesel.tar.xz
+RUN tar -xf diesel.tar.xz -C /usr/local/bin --strip-components=1
+RUN rm diesel.tar.xz
+
 # Cache dependencies
 COPY bridge/Cargo.toml bridge/Cargo.lock ./
 COPY bridge/api/Cargo.toml api/
@@ -23,14 +28,6 @@ COPY bridge/src src
 COPY bridge/api/src api/src
 COPY bridge/db/src db/src
 
-# Install diesel CLI for migrations
-RUN curl -SsL https://github.com/diesel-rs/diesel/releases/download/v2.2.10/diesel_cli-x86_64-unknown-linux-gnu.tar.xz -o diesel.tar.xz
-RUN tar -xf diesel.tar.xz -C /usr/local/bin --strip-components=1
-RUN rm diesel.tar.xz
-
-# ENV DATABASE_URL=postgres://synuser:synpass@db:5432/synnapse
-
-# RUN diesel migration run --database-url $DATABASE_URL
 # Build the actual binary
 RUN cargo build --release
 
