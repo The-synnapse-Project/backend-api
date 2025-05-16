@@ -84,27 +84,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Subcommands::Serve { database_url } => {
             let database_url = match database_url {
                 Some(url) => url,
-                None => {
-                    if let Ok(url) = std::env::var("DATABASE_URL") {
+                None => match std::env::var("DATABASE_URL") {
+                    Ok(url) => {
                         info!("Using DATABASE_URL from environment: {}", url);
-                        if let Err(e) = api::run_server(&url).await {
-                            error!("Server error: {}", e);
-                            return Err(e.into());
-                        }
-                        info!("Server shut down gracefully");
-                        return Ok(());
-                    } else {
-                        warn!("No DATABASE_URL found in environment");
+                        url
                     }
-                    let command = std::env::args()
-                        .next()
-                        .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
-                    println!(
-                        "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
-                        command
-                    );
-                    return Err("No database URL provided".into());
-                }
+                    Err(_) => {
+                        warn!("No DATABASE_URL found in environment");
+
+                        let command = std::env::args()
+                            .next()
+                            .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
+                        println!(
+                            "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
+                            command
+                        );
+                        return Err("No database URL provided".into());
+                    }
+                },
             };
             info!("Starting server with database at: {}", database_url);
             if let Err(e) = api::run_server(&database_url).await {
@@ -116,16 +113,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Subcommands::Show { database_url } => {
             let database_url = match database_url {
                 Some(url) => url,
-                None => {
-                    let command = std::env::args()
-                        .next()
-                        .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
-                    println!(
-                        "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
-                        command
-                    );
-                    return Err("No database URL provided".into());
-                }
+                None => match std::env::var("DATABASE_URL") {
+                    Ok(url) => {
+                        info!("Using DATABASE_URL from environment: {}", url);
+                        url
+                    }
+                    Err(_) => {
+                        warn!("No DATABASE_URL found in environment");
+
+                        let command = std::env::args()
+                            .next()
+                            .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
+                        println!(
+                            "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
+                            command
+                        );
+                        return Err("No database URL provided".into());
+                    }
+                },
             };
             info!("Showing database contents from: {}", database_url);
             let conn = &mut establish_connection(&database_url);
@@ -149,16 +154,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Subcommands::Seed { database_url } => {
             let database_url = match database_url {
                 Some(url) => url,
-                None => {
-                    let command = std::env::args()
-                        .next()
-                        .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
-                    println!(
-                        "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
-                        command
-                    );
-                    return Err("No database URL provided".into());
-                }
+                None => match std::env::var("DATABASE_URL") {
+                    Ok(url) => {
+                        info!("Using DATABASE_URL from environment: {}", url);
+                        url
+                    }
+                    Err(_) => {
+                        warn!("No DATABASE_URL found in environment");
+
+                        let command = std::env::args()
+                            .next()
+                            .unwrap_or_else(|| "synnapse-db-api-cli".to_string());
+                        println!(
+                            "DATABASE_URL not set.\nUsage: {} serve <DATABASE_URL>",
+                            command
+                        );
+                        return Err("No database URL provided".into());
+                    }
+                },
             };
             info!("Seeding database at: {}", database_url);
             if let Err(e) = db::seed(&database_url) {

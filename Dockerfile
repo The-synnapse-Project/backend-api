@@ -7,13 +7,11 @@ WORKDIR /app
 
 # Install required build dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends pkg-config libpq-dev libsqlite3-dev ca-certificates curl xz-utils && \
+    apt-get install -y --no-install-recommends pkg-config libpq-dev libsqlite3-dev libmariadb-dev libmariadb-dev-compat ca-certificates curl xz-utils && \
     rm -rf /var/lib/apt/lists/*
 
 # Install diesel CLI for migrations
-RUN curl -SsL https://github.com/diesel-rs/diesel/releases/download/v2.2.10/diesel_cli-x86_64-unknown-linux-gnu.tar.xz -o diesel.tar.xz
-RUN tar -xf diesel.tar.xz -C /usr/local/bin --strip-components=1
-RUN rm diesel.tar.xz
+RUN cargo install diesel_cli
 
 # Cache dependencies
 COPY backend-api/Cargo.toml backend-api/Cargo.lock ./
@@ -36,7 +34,7 @@ FROM debian:bookworm-slim AS runtime
 
 # Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libpq5 libsqlite3-dev ca-certificates curl && \
+    apt-get install -y --no-install-recommends libpq-dev libsqlite3-dev libmariadb-dev libmariadb-dev-compat libpq5 ca-certificates curl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -44,7 +42,7 @@ WORKDIR /app
 # Copy the compiled binary and migrations
 COPY --from=builder /app/target/release/synnapse-db-api-cli .
 COPY backend-api/db/migrations ./db/migrations
-COPY --from=builder /usr/local/bin/diesel /usr/local/bin/diesel
+COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
 RUN echo "[migrations_directory]\ndir = \"db/migrations\"" >> diesel.toml
 COPY ./backend-api/.env .
 
