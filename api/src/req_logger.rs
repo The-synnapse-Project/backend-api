@@ -14,7 +14,10 @@ impl Fairing for ReqLogger {
     fn info(&self) -> rocket::fairing::Info {
         rocket::fairing::Info {
             name: "Request Logger",
-            kind: rocket::fairing::Kind::Request,
+            kind: rocket::fairing::Kind::Liftoff
+                | rocket::fairing::Kind::Request
+                | rocket::fairing::Kind::Response
+                | rocket::fairing::Kind::Shutdown,
         }
     }
 

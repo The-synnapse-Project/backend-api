@@ -35,9 +35,7 @@ fn default_catcher(status: Status, req: &Request) -> String {
 }
 
 #[options("/<_..>")]
-fn all_options() -> &'static str {
-    ""
-}
+fn all_options() {}
 
 pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     // Initialize WebSocketManager
@@ -49,7 +47,7 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
     let build = rocket::build()
         .manage(app_state)
         .attach(ReqLogger {})
-        .attach(CORS)
+        .attach(CORS {})
         .register("/", catchers![not_found, default_catcher])
         .mount("/", rocket::routes![all_options])
         .mount(
