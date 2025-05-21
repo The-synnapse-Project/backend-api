@@ -1,16 +1,16 @@
 use crate::auth::crypto;
 use rocket::{
     http::Status,
-    request::{self, FromRequest, Request},
+    request::{FromRequest, Outcome, Request},
 };
+use rocket_okapi::request::OpenApiFromRequest;
 use std::{error::Error, fmt};
 
-struct ApiKey {
-    key: String,
-}
+#[derive(OpenApiFromRequest)]
+pub struct ApiKey;
 
 #[derive(Debug)]
-struct UnAuthorizedError {
+pub struct UnAuthorizedError {
     route: String,
 }
 
@@ -45,20 +45,18 @@ impl fmt::Display for UnAuthorizedError {
 impl<'r> FromRequest<'r> for ApiKey {
     type Error = UnAuthorizedError;
 
-    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         if let Some(api_key) = req.headers().get_one("x-syn-api-key") {
             if crypto::verify_api_key(api_key, &req.uri().to_string()) {
-                return request::Outcome::Success(ApiKey {
-                    key: api_key.to_string(),
-                });
+                return Outcome::Success(ApiKey);
             } else {
-                return request::Outcome::Error((
+                return Outcome::Error((
                     Status::Unauthorized,
                     UnAuthorizedError::new(&req.uri().to_string()),
                 ));
             }
         }
-        request::Outcome::Error((
+        Outcome::Error((
             Status::Unauthorized,
             UnAuthorizedError::new(&req.uri().to_string()),
         ))
