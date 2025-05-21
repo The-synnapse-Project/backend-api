@@ -1,3 +1,4 @@
+mod auth;
 mod cors;
 mod models;
 mod req_logger;

@@ -97,6 +97,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "db",
+ "hmac",
  "log",
  "once_cell",
  "rocket",
@@ -104,6 +105,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "sha2",
  "uuid",
 ]
 
