@@ -46,7 +46,7 @@ impl<'r> FromRequest<'r> for ApiKey {
     type Error = UnAuthorizedError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        if let Some(api_key) = req.headers().get_one("x-syn-api-key") {
+        if let Some(api_key) = req.headers().get_one("X-Syn-Api-Key") {
             if crypto::verify_api_key(api_key, &req.uri().to_string()) {
                 return Outcome::Success(ApiKey);
             } else {

@@ -9,6 +9,7 @@ use crate::models::Database;
 use crate::routes::{auth::*, entries::*, misc::*, permissions::*, person::*};
 use log::{error, info, warn};
 use req_logger::ReqLogger;
+use rocket::response::content::RawJson;
 use rocket::{Request, catch, catchers, http::Status, options};
 use rocket_okapi::{
     openapi_get_routes,
@@ -16,23 +17,41 @@ use rocket_okapi::{
 };
 
 #[catch(404)]
-fn not_found(req: &Request) -> String {
+fn not_found(req: &Request) -> RawJson<String> {
     warn!("Not found: {} {}", req.method(), req.uri());
-    format!(
-        "The requested URL {} was not found on this server.",
+    RawJson(format!(
+        "{{\"status\": \"error\",\
+        \"message\": \"Not found\",\
+        \"path\": \"{} {}\"}}",
+        req.method(),
         req.uri()
-    )
+    ))
+}
+
+#[catch(401)]
+fn unauthorized(req: &Request) -> RawJson<String> {
+    error!("Unauthorized: {} {}", req.method(), req.uri());
+    RawJson(format!(
+        "{{\"status\": \"error\",\
+        \"message\": \"Unauthorized access\",\
+        \"path\": \"{} {}\"}}",
+        req.method(),
+        req.uri()
+    ))
 }
 
 #[catch(default)]
-fn default_catcher(status: Status, req: &Request) -> String {
+fn default_catcher(status: Status, req: &Request) -> RawJson<String> {
     error!("Error: {} {} {}", status, req.method(), req.uri());
-    format!(
-        "An error occurred: {} {} {}",
+    RawJson(format!(
+        "{{\"status\": \"error\",\
+        \"message\": \"An error occurred\",\
+        \"status_code\": \"{}\",\
+        \"path\": \"{} {}\"}}",
         status,
         req.method(),
         req.uri()
-    )
+    ))
 }
 
 #[options("/<_..>")]
@@ -49,7 +68,7 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
         .manage(app_state)
         .attach(ReqLogger {})
         .attach(CORS {})
-        .register("/", catchers![not_found, default_catcher])
+        .register("/", catchers![not_found, default_catcher, unauthorized])
         .mount("/", rocket::routes![all_options])
         .mount(
             "/",

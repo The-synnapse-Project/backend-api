@@ -1,3 +1,4 @@
+use hex::encode;
 use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
 use sha2::Sha256;
@@ -9,10 +10,10 @@ static API_SECRET: Lazy<String> =
 pub fn verify_api_key(api_key: &str, uri: &str) -> bool {
     let expected_hmac = compute_hmac(uri);
 
-    expected_hmac == api_key.as_bytes()
+    expected_hmac == api_key
 }
 
-fn compute_hmac(uri: &str) -> Vec<u8> {
+fn compute_hmac(uri: &str) -> String {
     type HmacSha256 = Hmac<Sha256>;
 
     let mut mac =
@@ -22,5 +23,5 @@ fn compute_hmac(uri: &str) -> Vec<u8> {
     let result = mac.finalize();
     let code_bytes = result.into_bytes();
 
-    code_bytes.to_vec()
+    encode(code_bytes)
 }
