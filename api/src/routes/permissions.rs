@@ -1,3 +1,4 @@
+use crate::auth::guard::ApiKey;
 use crate::models::Database;
 use db::establish_connection;
 use db::interactions::permissions::PermissionsInteractor;
@@ -10,7 +11,7 @@ use rocket_okapi::openapi;
 /// Get all permissions
 #[openapi(tag = "Permissions")]
 #[get("/api/permission")]
-pub async fn get_permissions(db: &State<Database>) -> RawJson<String> {
+pub async fn get_permissions(db: &State<Database>, _api_key: ApiKey) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::get(conn) {
         Ok(permissions) => RawJson(serde_json::to_string(&permissions).unwrap()),
@@ -26,6 +27,7 @@ pub async fn get_permissions(db: &State<Database>) -> RawJson<String> {
 pub async fn get_permissions_by_person_id(
     db: &State<Database>,
     person_id: String,
+    _api_key: ApiKey,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::get_by_p_id(conn, &person_id) {
@@ -40,7 +42,11 @@ pub async fn get_permissions_by_person_id(
 /// Get a single permission by ID
 #[openapi(tag = "Permissions")]
 #[get("/api/permission/<permission_id>")]
-pub async fn get_permissions_by_id(db: &State<Database>, permission_id: String) -> RawJson<String> {
+pub async fn get_permissions_by_id(
+    db: &State<Database>,
+    permission_id: String,
+    _api_key: ApiKey,
+) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::get_by_id(conn, &permission_id) {
         Ok(permissions) => RawJson(serde_json::to_string(&permissions).unwrap()),
@@ -55,6 +61,7 @@ pub async fn get_permissions_by_id(db: &State<Database>, permission_id: String) 
 pub async fn create_permissions(
     db: &State<Database>,
     permissions: Json<Permissions>,
+    _api_key: ApiKey,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::new(conn, &permissions) {
@@ -77,6 +84,7 @@ pub async fn update_permissions(
     db: &State<Database>,
     permission_id: String,
     permissions: Json<Permissions>,
+    _api_key: ApiKey,
 ) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::update(conn, &permission_id, &permissions) {
@@ -91,7 +99,11 @@ pub async fn update_permissions(
 /// Delete a permission
 #[openapi(tag = "Permissions")]
 #[delete("/api/permission/<permission_id>")]
-pub async fn delete_permissions(db: &State<Database>, permission_id: String) -> RawJson<String> {
+pub async fn delete_permissions(
+    db: &State<Database>,
+    permission_id: String,
+    _api_key: ApiKey,
+) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     match PermissionsInteractor::delete(conn, &permission_id) {
         Ok(deleted_permissions) => RawJson(serde_json::to_string(&deleted_permissions).unwrap()),

@@ -1,3 +1,4 @@
+use crate::auth::guard::ApiKey;
 use crate::models::Database;
 use rocket::response::content::RawJson;
 use rocket::serde::json::Json;
@@ -14,7 +15,7 @@ pub struct Login {
 
 #[openapi(tag = "Authentication")]
 #[post("/api/auth/login", format = "json", data = "<login>")]
-pub async fn login(db: &State<Database>, login: Json<Login>) -> RawJson<String> {
+pub async fn login(db: &State<Database>, login: Json<Login>, _api_key: ApiKey) -> RawJson<String> {
     let conn = &mut db::establish_connection(&db.db_url);
     if let Ok(person) = db::interactions::person::PersonInteractor::get_by_email(conn, &login.email)
     {
@@ -36,7 +37,11 @@ pub struct Register {
 
 #[openapi(tag = "Authentication")]
 #[post("/api/auth/register", format = "json", data = "<register>")]
-pub async fn register(db: &State<Database>, register: Json<Register>) -> RawJson<String> {
+pub async fn register(
+    db: &State<Database>,
+    register: Json<Register>,
+    _api_key: ApiKey,
+) -> RawJson<String> {
     let conn = &mut db::establish_connection(&db.db_url);
 
     // Check if user with this email already exists
@@ -83,6 +88,7 @@ pub struct ChangePassword {
 pub async fn change_password(
     db: &State<Database>,
     change_pw: Json<ChangePassword>,
+    _api_key: ApiKey,
 ) -> RawJson<String> {
     let conn = &mut db::establish_connection(&db.db_url);
 
