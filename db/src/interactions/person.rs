@@ -82,6 +82,26 @@ impl PersonInteractor {
         result
     }
 
+    pub fn get_by_google_id(conn: &mut DbConnection, g_id: &str) -> QueryResult<models::Person> {
+        use crate::schema::person::dsl::*;
+        debug!("Retrieving person with Google ID: {}", g_id);
+        let result = match conn {
+            DbConnection::Sqlite(conn) => person
+                .filter(google_id.eq(g_id))
+                .first::<models::Person>(conn),
+            DbConnection::Pg(conn) => person
+                .filter(google_id.eq(g_id))
+                .first::<models::Person>(conn),
+        };
+
+        match &result {
+            Ok(p) => debug!("Retrieved person with ID: {} and name: {}", p.id, p.name),
+            Err(e) => error!("Failed to retrieve person with Google ID {}: {}", g_id, e),
+        }
+
+        result
+    }
+
     pub fn update(
         conn: &mut DbConnection,
         p_id: &str,
@@ -125,5 +145,25 @@ impl PersonInteractor {
         }
 
         result
+    }
+
+    pub fn update_google_id(conn: &mut DbConnection, p_id: &str, g_id: &str) -> QueryResult<models::Person> {
+        use crate::schema::person::dsl::*;
+        debug!("Updating Google ID for person with ID: {}", p_id);
+        
+        match conn {
+            DbConnection::Sqlite(conn) => {
+                diesel::update(person.filter(id.eq(p_id)))
+                    .set(google_id.eq(g_id))
+                    .execute(conn)?;
+            },
+            DbConnection::Pg(conn) => {
+                diesel::update(person.filter(id.eq(p_id)))
+                    .set(google_id.eq(g_id))
+                    .execute(conn)?;
+            },
+        }
+
+        Self::get_by_id(conn, p_id)
     }
 }

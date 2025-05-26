@@ -1,12 +1,13 @@
 mod auth;
 mod cors;
+mod email;
 mod models;
 mod req_logger;
 mod routes;
 
 use crate::cors::CORS;
 use crate::models::Database;
-use crate::routes::{auth::*, entries::*, misc::*, permissions::*, person::*};
+use crate::routes::{auth::*, entries::*, google_auth::*, misc::*, permissions::*, person::*};
 use log::{error, info, warn};
 use req_logger::ReqLogger;
 use rocket::response::content::RawJson;
@@ -95,12 +96,22 @@ pub async fn run_server(db_url: &str) -> Result<(), rocket::Error> {
                 create_person,
                 get_persons,
                 get_person_by_id,
+                get_person_by_google_id,
                 update_person,
                 delete_person,
                 // Auth
                 login,
                 register,
                 change_password,
+                forgot_password,
+                verify_reset_token,
+                reset_password,
+                set_password,
+                // Google Auth
+                google_login,
+                google_register,
+                link_google_account,
+                update_google_id,
                 // Misc
                 health_check,
             ],

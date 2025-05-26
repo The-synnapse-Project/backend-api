@@ -37,6 +37,21 @@ pub async fn get_person_by_id(
     }
 }
 
+/// Get a single person by Google ID
+#[openapi(tag = "Persons")]
+#[get("/api/person/by-google-id/<google_id>")]
+pub async fn get_person_by_google_id(
+    db: &State<Database>,
+    google_id: String,
+    _api_key: ApiKey,
+) -> RawJson<String> {
+    let conn = &mut establish_connection(&db.db_url);
+    match PersonInteractor::get_by_google_id(conn, &google_id) {
+        Ok(person) => RawJson(serde_json::to_string(&person).unwrap()),
+        Err(_) => RawJson("{\"status\": \"error\", \"message\": \"Person not found by Google ID\"}".to_string()),
+    }
+}
+
 /// Create a new person
 #[openapi(tag = "Persons")]
 #[post("/api/person", format = "json", data = "<person>")]
