@@ -12,7 +12,7 @@ log = "0.4"
 api = { path = "./api" }
 clap = { version = "4.5.38", features = ["derive"] }
 db = { path = "./db" }
-tokio = "1.45.0"
+tokio = "1.45.1"
 dotenv = "0.15.0"
 
 [profile.dev]
