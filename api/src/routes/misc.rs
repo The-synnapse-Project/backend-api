@@ -4,13 +4,12 @@ use rocket::get;
 use rocket::{State, response::content::RawJson};
 use rocket_okapi::openapi;
 
-use crate::auth::guard::ApiKey;
 use crate::models::Database;
 
 /// Test api health
 #[openapi(tag = "Health")]
 #[get("/health")]
-pub async fn health_check(db: &State<Database>, _api_key: ApiKey) -> RawJson<String> {
+pub async fn health_check(db: &State<Database>) -> RawJson<String> {
     let conn = &mut establish_connection(&db.db_url);
     let _ = match PersonInteractor::get(conn) {
         Ok(p) => p,
