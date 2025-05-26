@@ -1,8 +1,8 @@
 use std::{collections::HashMap, time::Instant};
 
-use log::info;
+use log::warn;
 use once_cell::sync::Lazy;
-use rocket::{Data, Orbit, Request, Response, Rocket, fairing::Fairing};
+use rocket::{Data, Request, Response, fairing::Fairing};
 use std::sync::Mutex;
 
 pub struct ReqLogger {}
@@ -14,15 +14,8 @@ impl Fairing for ReqLogger {
     fn info(&self) -> rocket::fairing::Info {
         rocket::fairing::Info {
             name: "Request Logger",
-            kind: rocket::fairing::Kind::Liftoff
-                | rocket::fairing::Kind::Request
-                | rocket::fairing::Kind::Response
-                | rocket::fairing::Kind::Shutdown,
+            kind: rocket::fairing::Kind::Request | rocket::fairing::Kind::Response,
         }
-    }
-
-    async fn on_liftoff(&self, _rocket: &Rocket<Orbit>) {
-        info!("Rocket api running");
     }
 
     async fn on_request(&self, req: &mut Request<'_>, _data: &mut Data<'_>) {
@@ -38,7 +31,7 @@ impl Fairing for ReqLogger {
             }
         );
         TIMINGS.lock().unwrap().insert(id.clone(), now);
-        info!(
+        warn!(
             "Request: {} {} from {}",
             req.method(),
             req.uri(),
@@ -79,10 +72,6 @@ impl Fairing for ReqLogger {
                 msg.push_str(&format!(" {}ms", duration.as_millis()));
             }
         }
-        info!("Response: {msg}");
-    }
-
-    async fn on_shutdown(&self, _rocket: &Rocket<Orbit>) {
-        info!("Shutting down");
+        warn!("Response: {msg}");
     }
 }
