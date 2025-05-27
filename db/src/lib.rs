@@ -1,9 +1,13 @@
 use diesel::connection::Connection;
 use diesel::prelude::{PgConnection, SqliteConnection};
-use interactions::{permissions::PermissionsInteractor, person::PersonInteractor};
-use log::{debug, error, info, trace};
+use interactions::entries::Action;
+use interactions::{
+    entries::EntriesInteractor, permissions::PermissionsInteractor, person::PersonInteractor,
+};
+use log::{debug, error, info, trace, warn};
 use models::Role;
 use std::path::Path;
+use std::time::Duration;
 pub mod crypto;
 pub mod interactions;
 pub mod models;
@@ -68,10 +72,10 @@ fn establish_pg_connection(db_url: &str) -> PgConnection {
 }
 
 pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    info!("Seeding database...");
+    warn!("Seeding database...");
     let connection = &mut establish_connection(db_url);
 
-    debug!("Creating admin user");
+    warn!("Creating admin user");
     let person = models::Person::new(
         "Admin",
         "Admin",
@@ -98,9 +102,10 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    info!("Creating 10 regular users");
+    let now = chrono::Local::now();
+    warn!("Creating 10 regular users");
     for i in 0..10 {
-        debug!("Creating user {}", i);
+        warn!("Creating user {}", i);
         let person = models::Person::new(
             &format!("User {i}"),
             "User",
@@ -126,6 +131,27 @@ pub fn seed(db_url: &str) -> Result<(), Box<dyn std::error::Error>> {
                 return Err(Box::new(e));
             }
         };
+
+        for j in 0..10 {
+            let action = if j % 2 == 0 {
+                Action::Enter
+            } else {
+                Action::Exit
+            };
+            let timestamp = chrono::NaiveDateTime::new(
+                now.date_naive(),
+                now.time() - Duration::from_secs(j * 60 + i * 60 * 10),
+            );
+            let entry = models::Entry::new_with_timestamp(&person.id, action, timestamp);
+
+            match EntriesInteractor::new(connection, &entry) {
+                Ok(_) => debug!("Entry created for user {}: {:?}", i, entry),
+                Err(e) => {
+                    error!("Failed to create entry for user {}: {}", i, e);
+                    return Err(Box::new(e));
+                }
+            }
+        }
     }
 
     info!("Database seeded successfully with 11 users");

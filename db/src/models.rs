@@ -128,7 +128,9 @@ impl Permissions {
     }
 }
 
-#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema)]
+#[derive(
+    Queryable, Selectable, Insertable, Serialize, Deserialize, AsChangeset, JsonSchema, Debug,
+)]
 #[diesel(table_name = crate::schema::entries)]
 pub struct Entry {
     pub id: String,
@@ -148,6 +150,24 @@ impl Entry {
             id: uuid::Uuid::new_v4().to_string(),
             person_id,
             instant: chrono::Local::now().naive_utc(),
+            action,
+        }
+    }
+
+    pub fn new_with_timestamp(
+        person_id: &str,
+        action: Action,
+        timestamp: chrono::NaiveDateTime,
+    ) -> Self {
+        let person_id = person_id.to_string();
+        let action = match action {
+            Action::Enter => "Enter".to_string(),
+            Action::Exit => "Exit".to_string(),
+        };
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            person_id,
+            instant: timestamp,
             action,
         }
     }
