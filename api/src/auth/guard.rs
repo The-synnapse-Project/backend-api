@@ -4,7 +4,7 @@ use rocket::{
     request::{FromRequest, Outcome, Request},
 };
 use rocket_okapi::request::OpenApiFromRequest;
-use std::{error::Error, fmt};
+use std::{env, error::Error, fmt};
 
 #[derive(OpenApiFromRequest)]
 pub struct ApiKey;
@@ -46,6 +46,9 @@ impl<'r> FromRequest<'r> for ApiKey {
     type Error = UnAuthorizedError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        if env::var("SYN_DISABLE_AUTH").unwrap_or("0".to_string()) == "1" {
+            return Outcome::Success(ApiKey);
+        }
         if let Some(api_key) = req.headers().get_one("X-Syn-Api-Key") {
             if crypto::verify_api_key(api_key, &req.uri().to_string()) {
                 return Outcome::Success(ApiKey);

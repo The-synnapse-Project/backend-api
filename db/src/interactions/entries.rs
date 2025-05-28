@@ -1,6 +1,8 @@
 use crate::DbConnection;
+use crate::date;
 use crate::models;
 use diesel::prelude::*;
+use log::error;
 
 pub struct EntriesInteractor {}
 
@@ -71,16 +73,21 @@ impl EntriesInteractor {
 
     pub fn get_by_date(conn: &mut DbConnection, date: &str) -> QueryResult<Vec<models::Entry>> {
         use crate::schema::entries::dsl::*;
-        let req_instant =
-            chrono::NaiveDateTime::parse_from_str(&format!("{date} 00:00:00"), "%Y-%m-%d %H:%M:%S")
-                .unwrap();
+        error!("get_by_date called with date: {}", date);
+        let req_instant = match date::parse_with_time(&format!("{} 23:59:59", date)) {
+            Some(i) => i,
+            None => {
+                error!("Failed to parse date: {}", date);
+                return Err(diesel::result::Error::NotFound);
+            }
+        };
         match conn {
             DbConnection::Sqlite(conn) => entries
-                .filter(instant.lt(req_instant))
+                .filter(instant.le(req_instant))
                 .select(models::Entry::as_select())
                 .load(conn),
             DbConnection::Pg(conn) => entries
-                .filter(instant.lt(req_instant))
+                .filter(instant.le(req_instant))
                 .select(models::Entry::as_select())
                 .load(conn),
         }
@@ -93,14 +100,20 @@ impl EntriesInteractor {
     ) -> QueryResult<Vec<models::Entry>> {
         use crate::schema::entries::dsl::*;
 
-        let req_instant = chrono::NaiveDateTime::parse_from_str(date, "%d-%m-%Y").unwrap();
+        let req_instant = match date::parse_with_time(&format!("{} 23:59:59", date)) {
+            Some(i) => i,
+            None => {
+                error!("Failed to parse date: {}", date);
+                return Err(diesel::result::Error::NotFound);
+            }
+        };
         match conn {
             DbConnection::Sqlite(conn) => entries
-                .filter(instant.lt(req_instant).and(person_id.eq(p_id)))
+                .filter(instant.le(req_instant).and(person_id.eq(p_id)))
                 .select(models::Entry::as_select())
                 .load(conn),
             DbConnection::Pg(conn) => entries
-                .filter(instant.lt(req_instant).and(person_id.eq(p_id)))
+                .filter(instant.le(req_instant).and(person_id.eq(p_id)))
                 .select(models::Entry::as_select())
                 .load(conn),
         }

@@ -147,21 +147,25 @@ impl PersonInteractor {
         result
     }
 
-    pub fn update_google_id(conn: &mut DbConnection, p_id: &str, g_id: &str) -> QueryResult<models::Person> {
+    pub fn update_google_id(
+        conn: &mut DbConnection,
+        p_id: &str,
+        g_id: &str,
+    ) -> QueryResult<models::Person> {
         use crate::schema::person::dsl::*;
         debug!("Updating Google ID for person with ID: {}", p_id);
-        
+
         match conn {
             DbConnection::Sqlite(conn) => {
                 diesel::update(person.filter(id.eq(p_id)))
                     .set(google_id.eq(g_id))
                     .execute(conn)?;
-            },
+            }
             DbConnection::Pg(conn) => {
                 diesel::update(person.filter(id.eq(p_id)))
                     .set(google_id.eq(g_id))
                     .execute(conn)?;
-            },
+            }
         }
 
         Self::get_by_id(conn, p_id)

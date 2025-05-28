@@ -9,6 +9,7 @@ use models::Role;
 use std::path::Path;
 use std::time::Duration;
 pub mod crypto;
+pub mod date;
 pub mod interactions;
 pub mod models;
 pub mod schema;
