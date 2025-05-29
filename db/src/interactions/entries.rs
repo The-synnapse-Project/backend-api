@@ -73,7 +73,6 @@ impl EntriesInteractor {
 
     pub fn get_by_date(conn: &mut DbConnection, date: &str) -> QueryResult<Vec<models::Entry>> {
         use crate::schema::entries::dsl::*;
-        error!("get_by_date called with date: {}", date);
         let req_instant = match date::parse_with_time(&format!("{} 23:59:59", date)) {
             Some(i) => i,
             None => {
